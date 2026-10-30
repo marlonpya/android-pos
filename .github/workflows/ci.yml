@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Cada repo se baja en su propia carpeta para que ../<hermano> exista,
+      # igual que en la máquina de desarrollo.
+      - uses: actions/checkout@v4
+        with:
+          path: android-pos
+
+      # Repo hermano: el composite build lo compila desde el código.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/dukpt-kt
+          path: dukpt-kt
+
+      # Repo hermano: el composite build lo compila desde el código.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/iso8583-kt
+          path: iso8583-kt
+
+      # Repo hermano: el composite build lo compila desde el código.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/pinpad-protocol-kt
+          path: pinpad-protocol-kt
+
+      - name: Configurar JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar y correr los tests
+        working-directory: android-pos
+        run: ./gradlew testDebugUnitTest assembleDebug --no-daemon
+
+      - name: Publicar el reporte de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: android-pos/app/build/reports/tests
+          if-no-files-found: ignore
