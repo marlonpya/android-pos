@@ -68,3 +68,25 @@ interface OutboxRepository {
 interface StanSource {
     fun next(): Int
 }
+
+/**
+ * La política de pantalla fija del dispositivo (lock task). La implementa
+ * Android; el dominio solo sabe pedir que se entre o se salga.
+ */
+interface KioskPolicy {
+    /** Con device owner el kiosko es completo; sin él solo hay pantalla fija con aviso. */
+    fun isDeviceOwner(): Boolean
+
+    fun enter()
+
+    fun exit()
+}
+
+/** Custodia del código de supervisor. Nunca devuelve el código ni su huella. */
+interface SupervisorCodeStore {
+    fun isSet(): Boolean
+
+    fun save(supervisorCode: String)
+
+    fun matches(supervisorCode: String): Boolean
+}

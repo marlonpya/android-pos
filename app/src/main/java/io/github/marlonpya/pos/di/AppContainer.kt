@@ -9,11 +9,13 @@ import io.github.marlonpya.pos.data.local.PosDatabase
 import io.github.marlonpya.pos.data.local.PrefsStanSource
 import io.github.marlonpya.pos.data.local.RoomOutboxRepository
 import io.github.marlonpya.pos.data.local.RoomTransactionRepository
+import io.github.marlonpya.pos.data.kiosk.KeystoreSupervisorCodeStore
 import io.github.marlonpya.pos.data.pinpad.LinkedPinpad
 import io.github.marlonpya.pos.data.pinpad.PinpadSource
 import io.github.marlonpya.pos.data.security.KeystoreBlobCipher
 import io.github.marlonpya.pos.domain.ChargeUseCase
 import io.github.marlonpya.pos.domain.Forwarder
+import io.github.marlonpya.pos.domain.KioskGuard
 import io.github.marlonpya.pos.domain.MessageFactory
 import io.github.marlonpya.pos.domain.TerminalConfig
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +35,9 @@ class AppContainer(context: Context) {
     val pinpad = LinkedPinpad(PinpadSource.IN_APP, BuildConfig.PINPAD_HOST, BuildConfig.PINPAD_PORT)
     val gateway = SocketGateway(BuildConfig.GATEWAY_HOST, BuildConfig.GATEWAY_PORT, network)
     val gatewayAdmin = GatewayAdminClient(BuildConfig.GATEWAY_ADMIN_URL)
+
+    val supervisorCodes = KeystoreSupervisorCodeStore(context, KeystoreBlobCipher("pos-supervisor"))
+    val kiosk = KioskGuard(supervisorCodes, now = System::currentTimeMillis)
 
     val forwarder = Forwarder(outbox, gateway, transactions, Dispatchers.IO)
 
