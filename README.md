@@ -72,6 +72,22 @@ di/AppContainer        inyección a mano
   el código aparece un número con forma de PAN (13 a 19 dígitos que pasan Luhn)
   o un log que mencione PAN, pista 2 o PIN.
 
+## Modo kiosko
+
+La caja queda fija: sin barras del sistema, Atrás inerte, la barra
+inferior propia (`KioskBottomBar`) siempre visible, y arranca sola al encender el equipo (también se registra como Home).
+La lógica de salida es `KioskGuard` (dominio, probada en JVM): 5 fallos seguidos
+bloquean un minuto y los mensajes nunca repiten el código.
+
+- **Aprovisionar** (equipo sin cuentas): `adb shell dpm set-device-owner io.github.marlonpya.pos/.data.kiosk.PosDeviceAdminReceiver`.
+  Sin device owner la app degrada a pantalla fija, que el usuario puede abandonar.
+- **Salir:** pulsación larga en la esquina superior izquierda, código de supervisor.
+  La primera vez el diálogo pide crearlo (mínimo 4 dígitos). Se guarda solo
+  sal + PBKDF2 cifrados con el Keystore.
+- **Quitar el device owner en laboratorio:** `adb shell dpm remove-active-admin io.github.marlonpya.pos/.data.kiosk.PosDeviceAdminReceiver`
+  (solo funciona en builds debug o emulador).
+- El kiosko se reactiva en cada arranque del proceso: el supervisor debe volver a desbloquear.
+
 ## Lo que no es real
 
 - El PINpad es un simulador: en un terminal real, la lectura, el PIN y el MAC
@@ -80,3 +96,5 @@ di/AppContainer        inyección a mano
 - La pista 2 viaja en claro por el enlace con el PINpad (ver
   `pinpad-protocol-kt`) y se guarda cifrada en la cola para el aviso offline.
 - Las respuestas del host no llevan MAC.
+- Kiosko: sin MDM ni actualizaciones remotas, y no se bloquean botones físicos
+  propios de cada fabricante. Pendiente de validar en hardware real.

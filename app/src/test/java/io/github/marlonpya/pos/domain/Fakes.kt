@@ -126,3 +126,13 @@ class CountingStan : StanSource {
     private var n = 0
     override fun next() = ++n
 }
+
+class FakeSupervisorCodeStore(private var code: String? = null) : SupervisorCodeStore {
+    override fun isSet() = code != null
+
+    override fun save(supervisorCode: String) {
+        code = supervisorCode
+    }
+
+    override fun matches(supervisorCode: String) = code == supervisorCode
+}
